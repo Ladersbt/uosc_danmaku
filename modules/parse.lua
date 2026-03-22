@@ -373,11 +373,13 @@ function convert_danmaku_to_xml(all_danmaku, danmaku_out)
     table.insert(xml, '</i>')
     local file = io.open(danmaku_out, "w")
     if not file then
+        show_message("无法写入目标 XML 文件", 3)
         msg.info("无法写入目标 XML 文件: " .. danmaku_out)
         return false
     end
     file:write(table.concat(xml))
     file:close()
-    msg.info("保存 XML 弹幕文件成功: " .. danmaku_out)
+    show_message("保存 XML 弹幕成功：" .. danmaku_out, 3)
+    msg.info("保存 XML 弹幕成功: " .. danmaku_out)
     return true
 end
