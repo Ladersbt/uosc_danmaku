@@ -234,7 +234,7 @@ function get_animes(query)
 
     -- 初始菜单：只有返回和loading
     table.insert(items, {
-        title = "← 返回",
+        title = "↩️ 返回",
         value = { "script-message-to", mp.get_script_name(), "open_search_danmaku_menu" },
         keep_open = false,
         selectable = true,
@@ -307,7 +307,7 @@ function get_animes(query)
         sort_anime_list(current_menu_state.raw_animes)
         local new_items = {}
         table.insert(new_items, {
-            title = "← 返回",
+            title = "↩️ 返回",
             value = { "script-message-to", mp.get_script_name(), "open_search_danmaku_menu" },
             keep_open = false,
             selectable = true,
@@ -531,7 +531,7 @@ function get_episodes(animeTitle, bangumiId, source_server, original_query, is_s
     -- 逻辑判断：根据是否是单服务器模式，决定返回按钮的行为
     if is_single_server_mode then
         table.insert(items, {
-            title = "← 返回搜索结果",
+            title = "↩️ 返回搜索结果",
             value = { "script-message-to", mp.get_script_name(), "search-server-event", source_server, original_query },
             keep_open = false,
             selectable = true,
@@ -540,7 +540,7 @@ function get_episodes(animeTitle, bangumiId, source_server, original_query, is_s
         -- 原有的返回逻辑（返回到全局搜索结果）
         local return_query = original_query or animeTitle:match("^(.-)%s*%(%d+%)$") or animeTitle
         table.insert(items, {
-            title = "← 返回",
+            title = "↩️ 返回",
             value = { "script-message-to", mp.get_script_name(), "search-anime-event", return_query },
             keep_open = false,
             selectable = true,
@@ -2123,7 +2123,7 @@ function search_single_server(server, query)
 
             -- 添加返回按钮
             table.insert(items, {
-                title = "← 返回上一级",
+                title = "↩️ 返回上一级",
                 value = { "script-message-to", mp.get_script_name(), "open_danmaku_source_menu" },
                 keep_open = false,
                 selectable = true,
@@ -2190,7 +2190,7 @@ function search_single_server(server, query)
                 -- 构造一个临时的加载中菜单项列表
                 local temp_loading_items = {
                     {
-                        title = "← 返回上一级",
+                        title = "↩️ 返回上一级",
                         value = { "script-message-to", mp.get_script_name(), "open_danmaku_source_menu" },
                         keep_open = false,
                         selectable = true,
@@ -2223,7 +2223,7 @@ function search_single_server(server, query)
                     msg.warn("服务器 [" .. server .. "] 单独搜索超时")
                     items = {
                          {
-                            title = "← 返回上一级",
+                            title = "↩️ 返回上一级",
                             value = { "script-message-to", mp.get_script_name(), "open_danmaku_source_menu" },
                             keep_open = false,
                             selectable = true,
