@@ -542,6 +542,18 @@ function open_input_menu_uosc()
         selectable = false,
     }
 
+    -- [local-add] 搜索历史条目：点击即以该关键词重新搜索（模块为本仓库增补，上游无此功能，同步时保留）
+    if SearchHistory then
+        for _, entry in ipairs(SearchHistory.list()) do
+            items[#items + 1] = {
+                title = entry.keyword,
+                hint = entry.time > 0 and os.date("%Y/%m/%d %H:%M", entry.time) or "",
+                icon = "history",
+                value = { "script-message-to", mp.get_script_name(), "search-anime-event", entry.keyword },
+            }
+        end
+    end
+
     local menu_props = {
         type = "menu_danmaku",
         title = "在此处输入番剧名称",
@@ -1444,6 +1456,8 @@ end)
 
 -- 注册函数给 uosc 按钮使用
 mp.register_script_message("search-anime-event", function(query)
+    -- [local-add] 记录搜索历史（原样输入；点击历史条目重搜也经过此处，从而置顶）
+    if SearchHistory then SearchHistory.record(query) end
     perform_cancel_active_request()
     if uosc_available then
         mp.commandv("script-message-to", "uosc", "close-menu", "menu_danmaku")

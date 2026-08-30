@@ -93,6 +93,10 @@ options = {
     excluded_path = [[
         []
     ]],
+    -- [local-add] 搜索历史记录文件路径，支持绝对路径和相对路径；设为空字符串禁用搜索历史
+    search_history_path = "~~/files/danmaku-search-history.json",
+    -- [local-add] 搜索历史最多保留的条数，小于 1 表示不限制；禁用搜索历史请将 search_history_path 置空
+    search_history_size = 15,
 }
 
 opt.read_options(options, mp.get_script_name(), function() end)

@@ -16,6 +16,7 @@ require("modules/parse")
 require("modules/guess")
 require('modules/render')
 require('modules/menu')
+require("modules/search_history") -- [local-add] 搜索历史（本仓库增补模块，上游无此功能）
 require("modules/update")
 
 require("apis/dandanplay")
