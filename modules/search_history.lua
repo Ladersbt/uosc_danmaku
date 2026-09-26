@@ -3,9 +3,14 @@
 --       展示历史记录，点击即以该关键词重新搜索；新条目置顶、去重、超限裁剪。
 -- 植入点清单（同步上游时需逐一检查保留）：
 --   1. main.lua           require("modules/search_history")
---   2. modules/menu.lua   open_input_menu_uosc() 内追加的历史条目块
+--   2. modules/menu.lua   open_input_menu_uosc_cmd() 内追加的历史条目块
+--      （承载条目展示 + delete 动作按钮；open_input_menu_uosc() 已重构为薄壳转调本函数）
 --   3. modules/menu.lua   search-anime-event 处理器首行的 SearchHistory.record(query)
 --   4. modules/options.lua 表尾的 search_history_path / search_history_size 两项
+--   5. modules/menu.lua   search-history-menu-event 处理器（接收 uosc callback 的 activate 事件，
+--      分派删除与重放）。该项与「2」中 menu_props 的 callback 字段是原子配对：uosc 非 callback
+--      模式会忽略 item 的 action 按钮（lib/menus.lua 的 activate 分支带 `not event.action` 守卫），
+--      故删本处理器而留 callback 字段会导致历史条目点击彻底失效且无任何报错。
 
 local msg = require('mp.msg')
 local utils = require('mp.utils')
@@ -68,6 +73,20 @@ function SearchHistory.record(query)
         end
     end
     save()
+end
+
+-- 删除一条历史记录，返回是否命中并已删除。
+-- record() 已保证表内关键词唯一，故按首个精确匹配项删除即可
+function SearchHistory.remove(keyword)
+    if type(keyword) ~= "string" or keyword == "" then return false end
+    for i, r in ipairs(records) do
+        if r.keyword == keyword then
+            table.remove(records, i)
+            save()
+            return true
+        end
+    end
+    return false
 end
 
 -- 启动时载入历史；文件缺失或损坏时静默空启动

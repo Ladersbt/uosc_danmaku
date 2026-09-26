@@ -522,6 +522,13 @@ function open_input_menu_get()
 end
 
 function open_input_menu_uosc()
+    open_input_menu_uosc_cmd("open-menu")
+end
+
+-- [local-add] 打开/刷新弹幕搜索菜单。cmd 为 "update-menu" 时复用已开菜单，
+-- uosc 的 Menu:update 会保留 search 状态（其 menu_state_props 含 'search'），
+-- 因此用户正在输入的关键词与光标不丢、菜单不重开闪烁；open-menu 则会把输入框重置为 search_suggestion
+function open_input_menu_uosc_cmd(cmd)
     local items = {}
 
     if DANMAKU.anime and DANMAKU.episode then
@@ -542,7 +549,8 @@ function open_input_menu_uosc()
         selectable = false,
     }
 
-    -- [local-add] 搜索历史条目：点击即以该关键词重新搜索（模块为本仓库增补，上游无此功能，同步时保留）
+    -- [local-add] 搜索历史条目：点击即以该关键词重新搜索，条目右侧附 delete 动作按钮单条删除
+    --（模块为本仓库增补，上游无此功能，同步时保留；actions_place="outside" 避免按钮压住时间 hint）
     if SearchHistory then
         for _, entry in ipairs(SearchHistory.list()) do
             items[#items + 1] = {
@@ -550,6 +558,8 @@ function open_input_menu_uosc()
                 hint = entry.time > 0 and os.date("%Y/%m/%d %H:%M", entry.time) or "",
                 icon = "history",
                 value = { "script-message-to", mp.get_script_name(), "search-anime-event", entry.keyword },
+                actions_place = "outside",
+                actions = { { icon = "delete", name = "delete", label = "删除此记录" } },
             }
         end
     end
@@ -562,10 +572,13 @@ function open_input_menu_uosc()
         search_suggestion = parse_title(),
         on_search = { "script-message-to", mp.get_script_name(), "search-anime-event" },
         footnote = "使用enter或ctrl+enter进行搜索",
-        items = items
+        items = items,
+        -- [local-add] 必须启用 callback 模式：uosc 非 callback 菜单会忽略 action 按钮
+        -- （lib/menus.lua 的 activate 分支带 `not event.action` 守卫，点击既不执行也不关菜单）
+        callback = { mp.get_script_name(), "search-history-menu-event" },
     }
     local json_props = utils.format_json(menu_props)
-    mp.commandv("script-message-to", "uosc", "open-menu", json_props)
+    mp.commandv("script-message-to", "uosc", cmd, json_props)
 end
 
 function open_input_menu()
@@ -1476,6 +1489,25 @@ mp.register_script_message("search-anime-event", function(query)
         if filter_note == "" then filter_note = nil end
     end
     get_animes(search_name, filter_note)
+end)
+
+-- [local-add] 搜索菜单的 uosc callback 处理：接收 activate 事件
+--   event.action == "delete" → 删除该条历史并就地刷新菜单（不重放搜索、不关菜单）
+--   无 action（点击条目本体/回车）→ 原样重放 item.value 触发的搜索消息
+mp.register_script_message("search-history-menu-event", function(json)
+    local event = utils.parse_json(json)
+    if type(event) ~= "table" or event.type ~= "activate" then return end
+    if type(event.value) ~= "table" or #event.value == 0 then return end
+
+    if event.action == "delete" then
+        local keyword = event.value[#event.value]
+        if SearchHistory and SearchHistory.remove(keyword) then
+            open_input_menu_uosc_cmd("update-menu")
+        end
+        return
+    end
+
+    mp.commandv(unpack(event.value))
 end)
 
 mp.register_script_message("search-episodes-event", function(animeTitle, bangumiId, api_server)
